@@ -4,33 +4,64 @@ do_deploy
 """
 from fabric.api import env, local, put, run, runs_once
 import os
-from datetime import datetime
+import time
+from fabric.operations import run, put
 
 
 env.hosts = ['34.227.90.97', '54.90.1.16']
 
-env.user = 'ubuntu'
-
 
 def do_deploy(archive_path):
-    """Deploys static files to thehost servers"""
-    if not os.path.exists(archive_path):
+    """Distributes archive to server
+    Args:
+        archive_path(str): path of .tgz archive
+    Returns:
+        True on sucess
+        False on non existent file path
+    """
+    if os.path.isfile(archive_path) is False:
         return False
-    file_name = os.path.basename(archive_path)
-    folder_name = file_name.replace(".tgz", "")
-    folder_path = "/data/web_static/releases/{}/".format(folder_name)
-    success = False
-    try:
-        put(archive_path, "/tmp/{}".format(file_name))
-        run("mkdir -p {}".format(folder_path))
-        run("tar -xzf /tmp/{} -C {}".format(file_name, folder_path))
-        run("rm -rf /tmp/{}".format(file_name))
-        run("mv {}web_static/* {}".format(folder_path, folder_path))
-        run("rm -rf {}web_static".format(folder_path))
-        run("rm -rf /data/web_static/current")
-        run("ln -s {} /data/web_static/current".format(folder_path))
-        print('New version deployed!')
-        success = True
-    except Exception:
-        success = False
-    return success
+    split_path = archive_path.split("/")
+    archive_name = split_path[-1]
+    res1 = put(archive_path, "/tmp/{}".format(archive_name))
+
+    split_arch_name = archive_name.split(".")
+    name_min_exten = split_arch_name[0]
+
+    res7 = run("mkdir -p /data/web_static/releases/{}/".format(name_min_exten))
+
+    res2 = run("tar -xzf /tmp/{} -C /data/web_static/releases/{}/".format(
+        archive_name, name_min_exten))
+
+    res3 = run("rm /tmp/{}".format(archive_name))
+
+    mv_file = '/data/web_static/releases/{}'.format(name_min_exten)
+
+    res8 = run("mv {}/web_static/* {}/".format(mv_file, mv_file))
+
+    res9 = run("rm -rf /data/web_static/releases/{}/web_static".format(
+        name_min_exten))
+
+    res4 = run("rm -rf /data/web_static/current")
+
+    link_name = "/data/web_static/current"
+    res5 = run("ln -s /data/web_static/releases/{}/ {}".format(
+        name_min_exten, link_name))
+
+    if res1.failed:
+        return False
+    if res2.failed:
+        return False
+    if res3.failed:
+        return False
+    if res4.failed:
+        return False
+    if res5.failed:
+        return False
+    if res7.failed:
+        return False
+    if res8.failed:
+        return False
+    if res9.failed:
+        return False
+    return True
