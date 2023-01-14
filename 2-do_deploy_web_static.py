@@ -7,9 +7,10 @@ import os
 from datetime import datetime
 
 
-env.hosts = ['34.227.90.97','54.90.1.16']
+env.hosts = ['34.227.90.97', '54.90.1.16']
 
 env.user = 'ubuntu'
+
 
 def do_deploy(archive_path):
     """Deploys static files to thehost servers"""
