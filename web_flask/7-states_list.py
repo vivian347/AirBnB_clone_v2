@@ -1,27 +1,26 @@
 #!/usr/bin/python3
-"""Falsk application that Returns States
 """
-from flask import Flask, render_template
-from models import storage, State
+starts a Flask web application
+"""
 
+from flask import Flask, render_template
+from models import *
+from models import storage
 app = Flask(__name__)
 
 
+@app.route('/states_list', strict_slashes=False)
+def states_list():
+    """display a HTML page with the states listed in alphabetical order"""
+    states = sorted(list(storage.all("State").values()), key=lambda x: x.name)
+    return render_template('7-states_list.html', states=states)
+
+
 @app.teardown_appcontext
-def teardown(exceptions):
-    """Perfoms cleanup
-    """
+def teardown_db(exception):
+    """closes the storage on teardown"""
     storage.close()
 
 
-@app.route("/states_list", strict_slashes=False)
-def states_list():
-    """Returns States when route is accessed
-    """
-    state_obj = storage.all("State")
-    return render_template("7-states_list.html",
-                           states=[value for value in state_obj.values()])
-
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port='5000')
